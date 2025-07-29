@@ -1,15 +1,9 @@
-from time import sleep 
+from libs.lib import *
 
-def abrir_log():
-    with open("/var/log/auth.log","r") as file:
-        file.seek(0,2)
-        while True:
-            linha = file.readline()
-            if not linha:
-                sleep(1)
-                continue
-            print(linha)
-
-linhas = abrir_log()
-#for x in linhas:
-#    print(x)
+if __name__ == "__main__":
+    for line in read_auth_logs():
+        # Se identificar que possui o protocolo SSH na entrada
+        if identify_protocol(line) == "ssh":
+            ssh_connection = get_ssh_connection_details(line)
+        else:
+            sudo_details = get_sudo_details(line)
