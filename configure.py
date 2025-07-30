@@ -1,5 +1,10 @@
 import subprocess
 from shutil import which
+from dotenv import load_dotenv
+from os import getenv
+
+
+# Este script realiza a configuração do programa
 
 def service_exists(service_name: str) -> bool:
     try:
@@ -17,12 +22,16 @@ def command_exists(cmd_name: str) ->str:
 
 service = "rsyslog"
 command_list = ["iptables"]
+load_dotenv()
 
 for command in command_list:
     if command_exists(command):
         print(f"{command} OK ...")
     else:
         print(f"[ERRO] {command} não existe. Instale primeiro")
+
+print("Token do Telegram OK" if getenv("BOT_TOKEN") else "[ERRO] é necessário configurar o token do Telegram para o envio de mensagens automáticas .")
+
 
 if service_exists(service):
     print(f"Serviço {service} funcionando perfeitamente")
