@@ -13,8 +13,8 @@ logging.basicConfig(filename='logs/conexoes.log', level=logging.INFO)
 env_file = Path(__file__).parent.parent / ".env"
 load_dotenv(env_file)
 
+# Obtém o ID do chat no telegram automaticamente
 def get_chat_id(bot_token, verbose=False):
-    """Obtém o chat_id automaticamente usando o bot_token"""
     try:
         url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
         response = requests.get(url).json()
@@ -30,14 +30,14 @@ def get_chat_id(bot_token, verbose=False):
         print_verbose(f"Erro ao obter chat_id: {e}", verbose)
         return None
 
+# Apenas uma função que faz o modo verbose na tela
 def print_verbose(message, verbose=True):
-    """Exibe mensagens no console se verbose=True"""
     if verbose:
         print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] {message}")
     logger.info(message)
 
+# Envia mensagem no chat do Telegram
 def send_telegram_message(message: str, verbose: bool = False):
-    """Envia mensagem via Telegram apenas se o Vandor estiver online"""
     BOT_TOKEN = getenv("BOT_TOKEN")
     if not BOT_TOKEN:
         msg = "Token do bot não configurado no .env"
@@ -87,7 +87,7 @@ def get_sudo_details(line : str) -> dict:
         log_string = f'Usuário {conexao["username"]} tentou obter privilégios de root em {conexao["date"]}'
         logger.error(log_string)
         print('[ERRO] '+log_string)
-        Thread(target=send_telegram_message, args=(log_string,)).start()
+        #Thread(target=send_telegram_message, args=(log_string,)).start()
     
     # Captura o comando sudo su para abrir sessão do root 
     elif "USER=root ; COMMAND=/usr/bin/su" in line:
@@ -96,7 +96,7 @@ def get_sudo_details(line : str) -> dict:
         log_string = f'Usuário {conexao["username"]} está atualmente logado como ROOT em {conexao["date"]}'
         logger.warning(log_string)
         print('[WARNING] '+log_string)
-        Thread(target=send_telegram_message, args=(log_string,)).start()
+        #Thread(target=send_telegram_message, args=(log_string,)).start()
     
 
     # Captura a mudança de senha 
@@ -106,7 +106,7 @@ def get_sudo_details(line : str) -> dict:
         log_string = f'A senha do usário {conexao["username"]} foi alterada em {conexao["date"]}'
         logger.warning(log_string)
         print('[WARNING] '+log_string)
-        Thread(target=send_telegram_message, args=(log_string,)).start()
+        #Thread(target=send_telegram_message, args=(log_string,)).start()
 
     return conexao
 
@@ -134,7 +134,7 @@ def get_ssh_connection_details(line : str,blocked_ips : set = None) -> dict:
         log_string = f'Usuário {conexao["username"]} conectado via SSH pelo endereço IP {conexao["ip_address"]} em {conexao["date"]}'
         logger.info(log_string)
         print('[INFO] '+log_string)
-        Thread(target=send_telegram_message, args=(log_string,)).start()
+        #Thread(target=send_telegram_message, args=(log_string,)).start()
         return conexao
 
     # Se o usuário fizer 3 tentativas, será bloqueado
@@ -149,8 +149,7 @@ def get_ssh_connection_details(line : str,blocked_ips : set = None) -> dict:
             
             log_string = f'Registradas {conexao["attempt"]} tentativas do usuário {conexao["username"]} pelo endereço IP {conexao["ip_address"]} em {conexao["date"]}'
             logger.error(log_string)
-            send_telegram_message(log_string)
-            Thread(target=send_telegram_message, args=(log_string,)).start()
+            #Thread(target=send_telegram_message, args=(log_string,)).start()
             print('[ERRO] ' + log_string)
             return conexao
             
