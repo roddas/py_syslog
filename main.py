@@ -14,5 +14,5 @@ if __name__ == "__main__":
         print("\nLista de IPs bloqueados durante a execução:")
         for ip in blocked_ips:
             print(f" - {ip}")
-        print("Se quiser desbloquear, execute no terminal: sudo ufw allow from <endereco_ip>")
+        print("Se quiser desbloquear, execute: sudo ufw delete deny from <endereco_ip> to any")
 

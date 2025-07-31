@@ -7,11 +7,25 @@ from os import getenv
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
+from subprocess import run
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='logs/conexoes.log', level=logging.INFO)
 env_file = Path(__file__).parent.parent / ".env"
 load_dotenv(env_file)
+
+# Executa o bloqueio do Endereço IP
+def block_ip_address(ip_address: str) -> None:
+    result = run(['ufw', 'insert', '1', 'deny', 'from', ip_address, 'to', 'any'])
+    
+    if result.returncode == 0:
+        log_string = f'Endereço IP {ip_address} bloqueado com sucesso.'
+        logger.info(log_string)
+        print('[INFO] ' + log_string)
+    else:
+        log_string = f'Falha ao bloquear o endereço IP {ip_address}.'
+        logger.error(log_string)
+        print('[ERRO] ' + log_string)
 
 # Obtém o ID do chat no telegram automaticamente
 def get_chat_id(bot_token, verbose=False):
@@ -93,7 +107,7 @@ def get_sudo_details(line : str) -> dict:
     elif "USER=root ; COMMAND=/usr/bin/su" in line:
         username = arr[3]
         conexao["username"] = username
-        log_string = f'Usuário {conexao["username"]} está atualmente logado como ROOT em {conexao["date"]}'
+        log_string = f'Usuário {conexao["username"]} está atualmente logado como ROOT via sudo em {conexao["date"]}'
         logger.warning(log_string)
         print('[WARNING] '+log_string)
         #Thread(target=send_telegram_message, args=(log_string,)).start()
@@ -114,7 +128,7 @@ def get_sudo_details(line : str) -> dict:
 
 
 # Esta função devolve um objeto com os detalhes de uma conexão SSH recebida
-def get_ssh_connection_details(line : str,blocked_ips : set = None) -> dict:
+def get_ssh_connection_details(line : str,blocked_ips : set) -> dict:
     
     arr = line.split()
     date = datetime.fromisoformat(arr[0])
@@ -151,6 +165,8 @@ def get_ssh_connection_details(line : str,blocked_ips : set = None) -> dict:
             logger.error(log_string)
             #Thread(target=send_telegram_message, args=(log_string,)).start()
             print('[ERRO] ' + log_string)
+            blocked_ips.add(conexao['ip_address'])
+            block_ip_address(conexao['ip_address'])
             return conexao
             
         except (ValueError, IndexError, KeyError) as e:
