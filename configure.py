@@ -6,7 +6,6 @@ from os import getenv
 
 # Este script realiza a configuração do programa
 
-
 def service_exists(service_name: str) -> bool:
     try:
         result = subprocess.run(
@@ -38,6 +37,7 @@ print(
     if getenv("BOT_TOKEN")
     else "[ERRO] é necessário configurar o token do Telegram para o envio de mensagens automáticas ."
 )
+print("ID do Chat encontrado com sucesso..." if getenv("CHAT_ID") else "[ERRO] é necessário configurar o id do chat do Telegram")
 
 
 if service_exists(service):

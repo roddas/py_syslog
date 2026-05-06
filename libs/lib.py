@@ -29,27 +29,6 @@ def block_ip_address(ip_address: str) -> None:
         print("[ERRO] " + log_string)
 
 
-# Obtém o ID do chat no telegram automaticamente
-def get_chat_id(bot_token, verbose=False):
-    try:
-        url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
-        response = requests.get(url).json()
-
-        if response.get("ok") and response.get("result"):
-            chat_id = response["result"][0]["message"]["chat"]["id"]
-            print_verbose(f"Chat ID encontrado: {chat_id}", verbose)
-            return str(chat_id)
-        else:
-            print_verbose(
-                "Nenhuma atualização encontrada. Envie uma mensagem para o bot primeiro.",
-                verbose,
-            )
-            return None
-    except Exception as e:
-        print_verbose(f"Erro ao obter chat_id: {e}", verbose)
-        return None
-
-
 # Apenas uma função que faz o modo verbose na tela
 def print_verbose(message, verbose=True):
     if verbose:
@@ -60,13 +39,14 @@ def print_verbose(message, verbose=True):
 # Envia mensagem no chat do Telegram
 def send_telegram_message(message: str, verbose: bool = False):
     BOT_TOKEN = getenv("BOT_TOKEN")
+    CHAT_ID = getenv("CHAT_ID")
+
     if not BOT_TOKEN:
         msg = "Token do bot não configurado no .env"
         print_verbose(msg, verbose)
         logger.warning(msg)
         return
 
-    CHAT_ID = get_chat_id(BOT_TOKEN, verbose)
     if not CHAT_ID:
         msg = "Não foi possível obter o chat_id"
         print_verbose(msg, verbose)
@@ -110,7 +90,7 @@ def get_sudo_details(line: str) -> dict:
         log_string = f'Usuário {conexao["username"]} tentou obter privilégios de root em {conexao["date"]}'
         logger.error(log_string)
         print("[ERRO] " + log_string)
-        # Thread(target=send_telegram_message, args=(log_string,)).start()
+        Thread(target=send_telegram_message, args=(log_string,)).start()
 
     # Captura o comando sudo su para abrir sessão do root
     elif "USER=root ; COMMAND=/usr/bin/su" in line:
@@ -119,7 +99,7 @@ def get_sudo_details(line: str) -> dict:
         log_string = f'Usuário {conexao["username"]} está atualmente logado como ROOT via sudo em {conexao["date"]}'
         logger.warning(log_string)
         print("[WARNING] " + log_string)
-        # Thread(target=send_telegram_message, args=(log_string,)).start()
+        Thread(target=send_telegram_message, args=(log_string,)).start()
 
     # Captura a mudança de senha
     elif "passwd:chauthtok" in line:
@@ -130,7 +110,7 @@ def get_sudo_details(line: str) -> dict:
         )
         logger.warning(log_string)
         print("[WARNING] " + log_string)
-        # Thread(target=send_telegram_message, args=(log_string,)).start()
+        Thread(target=send_telegram_message, args=(log_string,)).start()
 
     return conexao
 
@@ -156,7 +136,7 @@ def get_ssh_connection_details(line: str, blocked_ips: set) -> dict:
         log_string = f'Usuário {conexao["username"]} conectado via SSH pelo endereço IP {conexao["ip_address"]} em {conexao["date"]}'
         logger.info(log_string)
         print("[INFO] " + log_string)
-        # Thread(target=send_telegram_message, args=(log_string,)).start()
+        Thread(target=send_telegram_message, args=(log_string,)).start()
         return conexao
 
     # Se o usuário fizer 3 tentativas, será bloqueado
@@ -173,7 +153,7 @@ def get_ssh_connection_details(line: str, blocked_ips: set) -> dict:
 
             log_string = f'Registradas {conexao["attempt"]} tentativas do usuário {conexao["username"]} pelo endereço IP {conexao["ip_address"]} em {conexao["date"]}'
             logger.error(log_string)
-            # Thread(target=send_telegram_message, args=(log_string,)).start()
+            Thread(target=send_telegram_message, args=(log_string,)).start()
             print("[ERRO] " + log_string)
             blocked_ips.add(conexao["ip_address"])
             block_ip_address(conexao["ip_address"])
